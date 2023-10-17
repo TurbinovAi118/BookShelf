@@ -50,6 +50,10 @@ public class Book {
         this.size = size;
     }
 
+    public boolean isNotBlank(){
+        return !this.getAuthor().isBlank() || !this.getTitle().isBlank() || this.getSize() != null;
+    }
+
     @Override
     public String toString() {
         return "Book{" +

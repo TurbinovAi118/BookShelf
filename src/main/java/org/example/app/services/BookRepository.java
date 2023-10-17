@@ -6,6 +6,8 @@ import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Repository
 public class BookRepository implements ProjectRepository<Book> {
@@ -21,40 +23,29 @@ public class BookRepository implements ProjectRepository<Book> {
 
     @Override
     public void store(Book book) {
-        if (!book.getAuthor().isBlank() || !book.getTitle().isBlank() || book.getSize() != null) {
-            book.setId(book.hashCode());
-            logger.info("store new book " + book);
-            repo.add(book);
+        book.setId(book.hashCode());
+        repo.add(book);
+    }
+
+    @Override
+    public void removeItemById(Integer bookIdToRemove) {
+        for (Book book : retrieveAll()) {
+            if (book.getId().equals(bookIdToRemove)) {
+                logger.info("remove book completed: " + book);
+                repo.remove(book);
+            }
         }
-        logger.info("invalid book data");
     }
 
     @Override
     public void removeItemsByRegex(String queryRegex) {
-        String finalRegex = /*queryRegex.isBlank() ? "" : */("(.*)"+queryRegex+"(.*)");
+        Pattern pattern = Pattern.compile(queryRegex);
         repo.removeIf(book -> {
-            if(/*!queryRegex.isBlank() && */(book.getAuthor().matches(finalRegex) ||
-                    book.getTitle().matches(finalRegex) ||
-                    book.getSize().toString().matches(finalRegex))) {
-                logger.info("remove book completed " + book);
-                return true;
-            }
-            return false;
+            Matcher authorMatcher = pattern.matcher(book.getAuthor());
+            Matcher titleMatcher = pattern.matcher(book.getTitle());
+            Matcher sizeMatcher = pattern.matcher(book.getSize().toString());
+            return authorMatcher.matches() || titleMatcher.matches() || sizeMatcher.matches();
         });
     }
 
 }
-/*
-
-
-        String finalRegex = ("(.*)"+queryRegex+"(.*)");
-        repo.removeIf(book -> {
-            if(finalRegex.matches(book.getAuthor()) ||
-                    finalRegex.matches(book.getTitle()) ||
-                    finalRegex.matches(book.getSize().toString())){
-                logger.info("remove book completed " + book);
-                return true;
-            }
-            return false;
-        });
- */
